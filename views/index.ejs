@@ -1,0 +1,79 @@
+<html>
+<head>
+	<title>Group Chat</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+    <style type="text/css">
+    	#chatBox {
+    		margin: 0 auto;
+    		border: solid aqua 2px;
+    		width: 85%;
+    	}
+    	#chatSubmit {
+    		margin: 10px auto;
+    		width: 85%;
+    	}
+    	#chat_input {
+    		width: 100%;
+    		height: 35px;
+    	}
+    	#chat_Butt {
+    		display: block;
+    		height: 35px;
+    	}
+        .entered_room {
+            color: green;
+            font-weight: bold;
+        }
+        .user_dis {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function(){
+    		var socket = io.connect();
+
+            //initial prompt + validation + entered_room alert
+            var new_name = prompt("Please enter your display name");
+            if(new_name == ''){new_name = prompt("Oops, please enter your name");window.location.replace('http://localhost:8000');}
+            socket.emit('new_user', {name: new_name});
+            socket.on('new_user_from_server', function(data){
+                $('#chatBox').append("<p class='entered_room'>" + data.response + " has entered the room</p>");
+            });
+
+        	$('#chat_form').submit(function(e){
+                e.preventDefault();
+        		socket.emit('new_message', {
+        			name: new_name,
+        			message: $('#chat_input').val()
+        		});
+                $('#chat_input').val('');
+        	});
+
+            socket.on('post_message', function(data){
+                $('#chatBox').append("<p>" + data.response[data.response.length-1].name + ": " + data.response[data.response.length-1].message + "</p>");
+            });
+
+            socket.on('disconnect', function(data){
+                console.log(data);
+                $('#chatBox').append("<p class='user_dis'>" + data.response);
+            });
+        });
+    </script>
+</head>
+<body>
+	<div id='chatBox'>
+		<h3>Chatroom Demo ~ NodeJS + SocketsIO + jQuery + AWS Instance</h3>
+        <h5>Developed by <a href="mailto:charles139@hotmail.com">Charles Hollins</a></h5>
+		<hr>
+	</div>
+	<div id='chatSubmit'>
+		<form action='' id='chat_form'>
+			<input type='text' id='chat_input' name='chat_content'>
+			<input type='submit' id='chat_Butt' value='Send'>
+            <!-- <audio id="audio" src="http://dev.interactive-creation-works.net/1/1.ogg" ></audio> -->
+		</form>
+	</div>
+</body>
+</html>
